@@ -2,6 +2,7 @@ import os
 import requests
 import json
 from urllib.parse import urlparse
+from dotenv import load_dotenv, find_dotenv
 
 
 def upload_image(url, upload_to):
@@ -38,4 +39,22 @@ def get_file_format(url):
     return file_format.path
 
 
-fetch_spacex_last_launch('https://api.spacexdata.com/v5/launches/5eb87d47ffd86e000604b38a', 'images')
+def upload_apod_nasa_images(url, upload_to):
+    load_dotenv(find_dotenv())
+    token = os.environ.get('APOD_TOKEN')
+
+    url = url
+    response = requests.get(f'{url}?count=30&api_key={token}')
+    response.raise_for_status()
+
+    data_json = json.loads(response.content)
+
+    original_links = [entry['hdurl'] for entry in data_json if 'hdurl' in entry]
+
+    for url_number, url in enumerate(original_links):
+        filename = os.path.join(upload_to, f'nasa_apod_{url_number}.jpeg')
+        with open(filename, 'wb') as file:
+            file.write(response.content)
+
+
+
